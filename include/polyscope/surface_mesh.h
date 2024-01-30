@@ -113,6 +113,7 @@ public:
   render::ManagedBuffer<glm::vec3> faceCenters;
   render::ManagedBuffer<float> faceAreas;
   render::ManagedBuffer<glm::vec3> vertexNormals;
+  render::ManagedBuffer<glm::vec3> smoothedCornerNormals;
   render::ManagedBuffer<float> vertexAreas;
   // render::ManagedBuffer<double> edgeLengths;
 
@@ -319,6 +320,7 @@ private:
   std::vector<glm::vec3> faceCentersData;
   std::vector<float> faceAreasData;
   std::vector<glm::vec3> vertexNormalsData;
+  std::vector<glm::vec3> smoothedCornerNormalsData;
   std::vector<float> vertexAreasData;
   // std::vector<double> edgeLengthsData;
 
@@ -358,6 +360,7 @@ private:
   void computeFaceCenters();
   void computeFaceAreas();
   void computeVertexNormals();
+  void computeSmoothedCornerNormals();
   void computeVertexAreas();
   void computeEdgeLengths();
   void computeDefaultFaceTangentBasisX();

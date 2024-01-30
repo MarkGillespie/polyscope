@@ -48,6 +48,7 @@ faceNormals(            this, uniquePrefix() + "faceNormals",         faceNormal
 faceCenters(            this, uniquePrefix() + "faceCenters",         faceCentersData,        std::bind(&SurfaceMesh::computeFaceCenters, this)),         
 faceAreas(              this, uniquePrefix() + "faceAreas",           faceAreasData,          std::bind(&SurfaceMesh::computeFaceAreas, this)),
 vertexNormals(          this, uniquePrefix() + "vertexNormals",       vertexNormalsData,      std::bind(&SurfaceMesh::computeVertexNormals, this)),
+      smoothedCornerNormals(          this, uniquePrefix() + "smoothedCornerNormals",      smoothedCornerNormalsData,      std::bind(&SurfaceMesh::computeSmoothedCornerNormals, this)),
 vertexAreas(            this, uniquePrefix() + "vertexAreas",         vertexAreasData,        std::bind(&SurfaceMesh::computeVertexAreas, this)),
 
 // tangent spaces
@@ -522,6 +523,52 @@ void SurfaceMesh::computeVertexNormals() {
   vertexNormals.markHostBufferUpdated();
 }
 
+void SurfaceMesh::computeSmoothedCornerNormals() {
+  faceNormals.ensureHostBufferPopulated();
+  faceAreas.ensureHostBufferPopulated();
+
+  // list face normals incident on each vertex
+  std::vector<std::vector<glm::vec3>> vertexFaceNormals(nVertices(), std::vector<glm::vec3>{});
+  for (size_t iF = 0; iF < nFaces(); iF++) {
+    size_t start = faceIndsStart[iF];
+    size_t D = faceIndsStart[iF + 1] - start;
+    for (size_t j = 0; j < D; j++) {
+      size_t iV = faceIndsEntries[start + j];
+      vertexFaceNormals[iV].push_back(faceNormals.data[iF] * static_cast<float>(faceAreas.data[iF]));
+    }
+  }
+
+  smoothedCornerNormals.data.resize(nCorners());
+
+  const glm::vec3 zero{0., 0., 0.};
+
+  std::fill(smoothedCornerNormals.data.begin(), smoothedCornerNormals.data.end(), zero);
+
+  // Accumulate quantities from each face
+  size_t iC = 0;
+  for (size_t iF = 0; iF < nFaces(); iF++) {
+    size_t start = faceIndsStart[iF];
+    size_t D = faceIndsStart[iF + 1] - start;
+    for (size_t j = 0; j < D; j++) {
+      size_t iV = faceIndsEntries[start + j];
+      glm::vec3 n = faceNormals.data[iF];
+      for (const glm::vec3& fn : vertexFaceNormals[iV]) {
+        if (glm::dot(n, glm::normalize(fn)) > 0.95) {
+          smoothedCornerNormals.data[iC] += fn;
+        }
+      }
+      iC++;
+    }
+  }
+
+  // Normalize
+  for (size_t iC = 0; iC < nCorners(); iC++) {
+    smoothedCornerNormals.data[iC] = glm::normalize(smoothedCornerNormals.data[iC]);
+  }
+
+  smoothedCornerNormals.markHostBufferUpdated();
+}
+
 void SurfaceMesh::computeVertexAreas() {
 
   faceAreas.ensureHostBufferPopulated();
@@ -808,6 +855,8 @@ void SurfaceMesh::setMeshGeometryAttributes(render::ShaderProgram& p) {
 
     if (getShadeStyle() == MeshShadeStyle::Smooth) {
       p.setAttribute("a_vertexNormals", vertexNormals.getIndexedRenderAttributeBuffer(triangleVertexInds));
+    } else if (getShadeStyle() == MeshShadeStyle::AutoSmooth) {
+      p.setAttribute("a_vertexNormals", smoothedCornerNormals.getIndexedRenderAttributeBuffer(triangleCornerInds));
     } else {
       // these aren't actually used in in the automatically-generated case, but the shader is set up in a lazy way so
       // it is still needed
@@ -1220,12 +1269,15 @@ void SurfaceMesh::buildCustomUI() {
         return "Flat";
       case MeshShadeStyle::TriFlat:
         return "Tri Flat";
+      case MeshShadeStyle::AutoSmooth:
+        return "Auto Smooth";
       }
       return "";
     };
 
     if (ImGui::BeginCombo("##Mode", styleName(getShadeStyle()).c_str())) {
-      for (MeshShadeStyle s : {MeshShadeStyle::Flat, MeshShadeStyle::Smooth, MeshShadeStyle::TriFlat}) {
+      for (MeshShadeStyle s :
+           {MeshShadeStyle::Flat, MeshShadeStyle::Smooth, MeshShadeStyle::TriFlat, MeshShadeStyle::AutoSmooth}) {
         std::string sName = styleName(s);
         if (ImGui::Selectable(sName.c_str(), getShadeStyle() == s)) {
           setShadeStyle(s);
