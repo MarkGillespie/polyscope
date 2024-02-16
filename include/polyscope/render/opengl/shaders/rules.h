@@ -25,6 +25,8 @@ extern const ShaderReplacementRule SHADE_COLORMAP_VALUE;        // colormapped f
 extern const ShaderReplacementRule SHADE_COLORMAP_ANGULAR2;     // colormapped from angle of shadeValue2
 extern const ShaderReplacementRule SHADE_GRID_VALUE2;           // generate a two-color grid with lines from shadeValue2
 extern const ShaderReplacementRule SHADE_CHECKER_VALUE2;        // generate a two-color checker from shadeValue2
+extern const ShaderReplacementRule SHADE_RADIAL_GRID_VALUE2;    // generate radial a two-color grid from shadeValue2
+extern const ShaderReplacementRule SHADE_RADIAL_CHECKER_VALUE2; // generate radial a two-color grid from shadeValue2
 extern const ShaderReplacementRule SHADE_CHECKER_CATEGORY;      // generate a checker with colors from a categorical int
 extern const ShaderReplacementRule SHADEVALUE_MAG_VALUE2;       // generate a shadeValue from the magnitude of shadeValue2
 extern const ShaderReplacementRule ISOLINE_STRIPE_VALUECOLOR;   // modulate albedoColor based on shadeValue

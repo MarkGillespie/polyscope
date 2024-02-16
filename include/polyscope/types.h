@@ -30,7 +30,9 @@ enum class ParamVizStyle {
   GRID,
   LOCAL_CHECK,
   LOCAL_RAD,
-  CHECKER_ISLANDS
+  CHECKER_ISLANDS,
+  RADIAL_CHECKER,
+  RADIAL_GRID,
 }; // TODO add "UV" with test UV map
 
 enum class ManagedBufferType {

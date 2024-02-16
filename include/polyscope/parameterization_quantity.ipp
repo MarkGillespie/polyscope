@@ -26,6 +26,12 @@ std::string styleName(ParamVizStyle v) {
   case ParamVizStyle::LOCAL_RAD:
     return "local dist";
     break;
+  case ParamVizStyle::RADIAL_CHECKER:
+    return "radial checker";
+    break;
+  case ParamVizStyle::RADIAL_GRID:
+    return "radial grid";
+    break;
   }
   exception("broken");
   return "";
@@ -115,9 +121,33 @@ void ParameterizationQuantity<QuantityT>::buildParameterizationUI() {
     if (render::buildColormapSelector(cMap.get())) {
       setColorMap(getColorMap());
     }
-  }
+  } break;
+  case ParamVizStyle::RADIAL_CHECKER: {
+    ImGui::SameLine();
+    if (ImGui::ColorEdit3("##colors2", &checkColor1.get()[0], ImGuiColorEditFlags_NoInputs))
+      setCheckerColors(getCheckerColors());
+    ImGui::SameLine();
+    if (ImGui::ColorEdit3("##colors", &checkColor2.get()[0], ImGuiColorEditFlags_NoInputs))
+      setCheckerColors(getCheckerColors());
+    // Angle slider
+    ImGui::PushItemWidth(100);
+    ImGui::SliderAngle("angle shift", &localRot, -180,
+                       180); // displays in degrees, works in radians TODO refresh/update/persist
 
-  break;
+  } break;
+  case ParamVizStyle::RADIAL_GRID: {
+    ImGui::SameLine();
+    if (ImGui::ColorEdit3("##base", &gridBackgroundColor.get()[0], ImGuiColorEditFlags_NoInputs))
+      setGridColors(getGridColors());
+    ImGui::SameLine();
+    if (ImGui::ColorEdit3("##line", &gridLineColor.get()[0], ImGuiColorEditFlags_NoInputs))
+      setGridColors(getGridColors());
+    break;
+    // Angle slider
+    ImGui::PushItemWidth(100);
+    ImGui::SliderAngle("angle shift", &localRot, -180,
+                       180); // displays in degrees, works in radians TODO refresh/update/persist
+  } break;
   }
 }
 
@@ -126,8 +156,9 @@ void ParameterizationQuantity<QuantityT>::buildParameterizationOptionsUI() {
 
   // Choose viz style
   if (ImGui::BeginMenu("Style")) {
-    for (ParamVizStyle s : {ParamVizStyle::CHECKER_ISLANDS, ParamVizStyle::CHECKER, ParamVizStyle::GRID,
-                            ParamVizStyle::LOCAL_CHECK, ParamVizStyle::LOCAL_RAD}) {
+    for (ParamVizStyle s :
+         {ParamVizStyle::CHECKER_ISLANDS, ParamVizStyle::CHECKER, ParamVizStyle::GRID, ParamVizStyle::LOCAL_CHECK,
+          ParamVizStyle::LOCAL_RAD, ParamVizStyle::RADIAL_CHECKER, ParamVizStyle::RADIAL_GRID}) {
 
       if (s == ParamVizStyle::CHECKER_ISLANDS && !haveIslandLabels()) {
         // only allow CHECKER_ISLANDS if we actually have island labels
@@ -163,6 +194,12 @@ std::vector<std::string> ParameterizationQuantity<QuantityT>::addParameterizatio
   case ParamVizStyle::LOCAL_RAD:
     rules.insert(rules.end(), {"SHADE_COLORMAP_ANGULAR2", "SHADEVALUE_MAG_VALUE2", "ISOLINE_STRIPE_VALUECOLOR"});
     break;
+  case ParamVizStyle::RADIAL_CHECKER:
+    rules.insert(rules.end(), {"SHADE_RADIAL_CHECKER_VALUE2"});
+    break;
+  case ParamVizStyle::RADIAL_GRID:
+    rules.insert(rules.end(), {"SHADE_RADIAL_GRID_VALUE2"});
+    break;
   }
 
   return rules;
@@ -183,6 +220,9 @@ void ParameterizationQuantity<QuantityT>::fillParameterizationBuffers(render::Sh
     break;
   case ParamVizStyle::LOCAL_RAD:
     p.setTextureFromColormap("t_colormap", cMap.get());
+    break;
+  case ParamVizStyle::RADIAL_GRID:
+  case ParamVizStyle::RADIAL_CHECKER:
     break;
   }
 }
@@ -218,6 +258,16 @@ void ParameterizationQuantity<QuantityT>::setParameterizationUniforms(render::Sh
   case ParamVizStyle::LOCAL_RAD:
     p.setUniform("u_angle", localRot);
     p.setUniform("u_modDarkness", getAltDarkness());
+    break;
+  case ParamVizStyle::RADIAL_CHECKER:
+    p.setUniform("u_angle", localRot);
+    p.setUniform("u_color1", getCheckerColors().first);
+    p.setUniform("u_color2", getCheckerColors().second);
+    break;
+  case ParamVizStyle::RADIAL_GRID:
+    p.setUniform("u_angle", localRot);
+    p.setUniform("u_gridLineColor", getGridColors().first);
+    p.setUniform("u_gridBackgroundColor", getGridColors().second);
     break;
   }
 }

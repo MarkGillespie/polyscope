@@ -225,6 +225,78 @@ const ShaderReplacementRule SHADE_CHECKER_VALUE2 (
     /* textures */ {}
 );
 
+const ShaderReplacementRule SHADE_RADIAL_GRID_VALUE2 (
+    /* rule name */ "SHADE_RADIAL_GRID_VALUE2",
+    { /* replacement sources */
+      {"FRAG_DECLARATIONS", R"(
+          uniform float u_modLen;
+          uniform vec3 u_gridLineColor;
+          uniform vec3 u_gridBackgroundColor;
+          uniform float u_angle;
+        )"},
+      {"GENERATE_SHADE_COLOR", R"(
+        float pi = 3.14159265359;
+        vec2 arg = vec2(log(length(shadeValue2)), atan(shadeValue2.y, shadeValue2.x) * 6 / pi);
+        arg.y += u_angle  * 6 / pi;
+        float mX = mod(arg.x, 2.0 * u_modLen) / u_modLen - 1.f; // in [-1, 1]
+        float mY = mod(arg.y, 2.0 * u_modLen) / u_modLen - 1.f;
+        float minD = min(min(abs(mX), 1.0 - abs(mX)), min(abs(mY), 1.0 - abs(mY))) * 2.; // rect distace from flipping sign in [0,1]
+        float width = 0.05;
+        float slopeWidthPix = 5.;
+        vec2 fw = fwidth(arg);
+        float scale = max(fw.x, fw.y);
+        float pWidth = slopeWidthPix * scale;
+        float s = smoothstep(width, width + pWidth, minD);
+        vec3 albedoColor = mix(u_gridLineColor, u_gridBackgroundColor, s);
+      )"}
+    },
+    /* uniforms */ {
+       {"u_modLen", RenderDataType::Float},
+       {"u_gridLineColor", RenderDataType::Vector3Float},
+       {"u_gridBackgroundColor", RenderDataType::Vector3Float},
+       {"u_angle", RenderDataType::Float},
+    },
+    /* attributes */ {},
+    /* textures */ {}
+);
+
+const ShaderReplacementRule SHADE_RADIAL_CHECKER_VALUE2 (
+    /* rule name */ "SHADE_RADIAL_CHECKER_VALUE2",
+    { /* replacement sources */
+      {"FRAG_DECLARATIONS", R"(
+          uniform float u_modLen;
+          uniform vec3 u_color1;
+          uniform vec3 u_color2;
+          uniform float u_angle;
+        )"},
+      {"GENERATE_SHADE_COLOR", R"(
+        float pi = 3.14159265359;
+        vec2 arg = vec2(log(length(shadeValue2)), atan(shadeValue2.y, shadeValue2.x) * 6 / pi);
+        arg.y += u_angle  * 6 / pi;
+        // NOTE checker math shared with other shaders
+        float mX = mod(arg.x, 2.0 * u_modLen) / u_modLen - 1.f; // in [-1, 1]
+        float mY = mod(arg.y, 2.0 * u_modLen) / u_modLen - 1.f;
+        float minD = min( min(abs(mX), 1.0 - abs(mX)), min(abs(mY), 1.0 - abs(mY))) * 2.; // rect distace from flipping sign in [0,1]
+        float p = 6;
+        float minDSmooth = pow(minD, 1. / p);
+        // TODO do some clever screen space derivative thing to prevent aliasing
+        float v = (mX * mY); // in [-1, 1], color switches at 0
+        float adjV = sign(v) * minDSmooth;
+        float s = smoothstep(-1.f, 1.f, adjV);
+        vec3 albedoColor = mix(u_color1, u_color2, s);
+      )"}
+    },
+    /* uniforms */ {
+       {"u_modLen", RenderDataType::Float},
+       {"u_color1", RenderDataType::Vector3Float},
+       {"u_color2", RenderDataType::Vector3Float},
+       {"u_angle", RenderDataType::Float},
+    },
+    /* attributes */ {},
+    /* textures */ {}
+);
+
+
 const ShaderReplacementRule SHADE_CHECKER_CATEGORY(
     /* rule name */ "SHADE_CHECKER_CATEGORY",
     { /* replacement sources */
