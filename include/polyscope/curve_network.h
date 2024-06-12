@@ -149,6 +149,9 @@ public:
   CurveNetwork* setMaterial(std::string name);
   std::string getMaterial();
 
+  CurveNetwork* setPickable(bool pickable);
+  bool getPickable();
+
 
 private:
   // Storage for the managed buffers above. You should generally interact with these through the managed buffers, not
@@ -164,6 +167,7 @@ private:
   PersistentValue<glm::vec3> color;
   PersistentValue<ScaledValue<float>> radius;
   PersistentValue<std::string> material;
+  PersistentValue<bool> pickable;
 
   // Drawing related things
   // if nullptr, prepare() (resp. preparePick()) needs to be called

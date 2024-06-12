@@ -236,18 +236,30 @@ const ShaderReplacementRule SHADE_RADIAL_GRID_VALUE2 (
         )"},
       {"GENERATE_SHADE_COLOR", R"(
         float pi = 3.14159265359;
-        vec2 arg = vec2(log(length(shadeValue2)), atan(shadeValue2.y, shadeValue2.x) * 6 / pi);
-        arg.y += u_angle  * 6 / pi;
-        float mX = mod(arg.x, 2.0 * u_modLen) / u_modLen - 1.f; // in [-1, 1]
-        float mY = mod(arg.y, 2.0 * u_modLen) / u_modLen - 1.f;
+        float angle = (atan(shadeValue2.y, shadeValue2.x) + u_angle) * 6 / pi;
+        float radius = log(length(shadeValue2)) * 6 / pi;
+        float box_width = ( radius >= -1 * 4 * u_modLen ) ? 1 * u_modLen :
+                          ( radius >= -2 * 4 * u_modLen ) ? 2 * u_modLen :
+                          ( radius >= -4 * 4 * u_modLen ) ? 4 * u_modLen :
+                          ( radius >= -8 * 4 * u_modLen ) ? 8 * u_modLen :
+                          ( radius >= -16 * 4 * u_modLen ) ? 16 * u_modLen :
+32 * u_modLen;
+                          // ( radius >= -32 * 4 * u_modLen ) ? 32 * u_modLen :
+                          // 64 * u_modLen;
+        float mX = mod(angle, 2.0 * box_width) / box_width - 1.f; // in [-1, 1]
+        float mY = mod(radius, 2.0 * box_width) / box_width - 1.f;
         float minD = min(min(abs(mX), 1.0 - abs(mX)), min(abs(mY), 1.0 - abs(mY))) * 2.; // rect distace from flipping sign in [0,1]
         float width = 0.05;
         float slopeWidthPix = 5.;
-        vec2 fw = fwidth(arg);
-        float scale = max(fw.x, fw.y);
-        float pWidth = slopeWidthPix * scale;
+        // float w_angle = min(fwidth(angle), width);
+        // float w_radius = fwidth(radius);
+        // float scale = max(w_angle, w_radius);
+        // float scale = w_radius;
+        // float pWidth = slopeWidthPix * scale;
+        float pWidth = width / 10;
         float s = smoothstep(width, width + pWidth, minD);
         vec3 albedoColor = mix(u_gridLineColor, u_gridBackgroundColor, s);
+        if (length(shadeValue2) > 1.) albedoColor = vec3(1., 0., 0.);
       )"}
     },
     /* uniforms */ {

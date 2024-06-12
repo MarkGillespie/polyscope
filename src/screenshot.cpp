@@ -65,6 +65,8 @@ void saveImage(std::string name, unsigned char* buffer, int w, int h, int channe
 
 void screenshot(std::string filename, bool transparentBG) {
 
+  std::cout << "polyscope is saving screenshot to " << filename << std::endl;
+
   render::engine->useAltDisplayBuffer = true;
   if (transparentBG) render::engine->lightCopy = true; // copy directly in to buffer without blending
 

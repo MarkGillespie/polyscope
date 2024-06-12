@@ -60,7 +60,8 @@ edgeColor(              uniquePrefix() + "edgeColor",       glm::vec3{0., 0., 0.
 edgeWidth(              uniquePrefix() + "edgeWidth",       0.),
 backFacePolicy(         uniquePrefix() + "backFacePolicy",  BackFacePolicy::Different),
 backFaceColor(          uniquePrefix() + "backFaceColor",   glm::vec3(1.f - surfaceColor.get().r, 1.f - surfaceColor.get().g, 1.f - surfaceColor.get().b)),
-shadeStyle(             uniquePrefix() + "shadeStyle",      MeshShadeStyle::Flat)
+shadeStyle(             uniquePrefix() + "shadeStyle",      MeshShadeStyle::Flat),
+surfacePickable(        uniquePrefix() + "surfacePickable", true)
 
 // clang-format on
 {}
@@ -754,7 +755,7 @@ void SurfaceMesh::drawDelayed() {
 }
 
 void SurfaceMesh::drawPick() {
-  if (!isEnabled()) {
+  if (!isEnabled() || !getSurfacePickable()) {
     return;
   }
 
@@ -1074,6 +1075,22 @@ void SurfaceMesh::buildPickUI(size_t localPickID) {
     }
   } else {
     buildCornerInfoGui(localPickID - cornerPickIndStart);
+  }
+}
+
+std::pair<SurfaceMesh::ElementType, size_t> SurfaceMesh::identifyPickID(size_t localPickID) {
+  // Selection type
+  if (localPickID < facePickIndStart) {
+    return std::make_pair(ElementType::Vertex, localPickID);
+    buildVertexInfoGui(localPickID);
+  } else if (localPickID < edgePickIndStart) {
+    return std::make_pair(ElementType::Face, localPickID - facePickIndStart);
+  } else if (localPickID < halfedgePickIndStart) {
+    return std::make_pair(ElementType::Edge, localPickID - edgePickIndStart);
+  } else if (localPickID < cornerPickIndStart) {
+    return std::make_pair(ElementType::Halfedge, localPickID - halfedgePickIndStart);
+  } else {
+    return std::make_pair(ElementType::Corner, localPickID - cornerPickIndStart);
   }
 }
 
@@ -1502,6 +1519,13 @@ SurfaceMesh* SurfaceMesh::setShadeStyle(MeshShadeStyle newStyle) {
 }
 MeshShadeStyle SurfaceMesh::getShadeStyle() { return shadeStyle.get(); }
 
+SurfaceMesh* SurfaceMesh::setSurfacePickable(bool pickable) {
+  surfacePickable = pickable;
+  refresh();
+  return this;
+}
+bool SurfaceMesh::getSurfacePickable() { return surfacePickable.get(); }
+
 // === Quantity adders
 
 
@@ -1713,5 +1737,26 @@ void SurfaceMeshQuantity::buildFaceInfoGUI(size_t fInd) {}
 void SurfaceMeshQuantity::buildEdgeInfoGUI(size_t eInd) {}
 void SurfaceMeshQuantity::buildHalfedgeInfoGUI(size_t heInd) {}
 void SurfaceMeshQuantity::buildCornerInfoGUI(size_t cInd) {}
+
+std::ostream& operator<<(std::ostream& out, const SurfaceMesh::ElementType& e) {
+  switch (e) {
+  case SurfaceMesh::ElementType::Vertex:
+    out << "Vertex";
+    break;
+  case SurfaceMesh::ElementType::Edge:
+    out << "Edge";
+    break;
+  case SurfaceMesh::ElementType::Face:
+    out << "Face";
+    break;
+  case SurfaceMesh::ElementType::Halfedge:
+    out << "Halfedge";
+    break;
+  case SurfaceMesh::ElementType::Corner:
+    out << "Corner";
+    break;
+  }
+  return out;
+}
 
 } // namespace polyscope

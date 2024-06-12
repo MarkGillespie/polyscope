@@ -27,7 +27,8 @@ CurveNetwork::CurveNetwork(std::string name, std::vector<glm::vec3> nodes_, std:
       nodePositionsData(std::move(nodes_)), 
       color(uniquePrefix() + "#color", getNextUniqueColor()), 
       radius(uniquePrefix() + "#radius", relativeValue(0.005)),
-      material(uniquePrefix() + "#material", "clay")
+      material(uniquePrefix() + "#material", "clay"),
+      pickable(uniquePrefix() + "#pickable", true)
 // clang-format on
 {
 
@@ -150,7 +151,7 @@ void CurveNetwork::drawDelayed() {
 }
 
 void CurveNetwork::drawPick() {
-  if (!isEnabled()) {
+  if (!isEnabled() || !getPickable()) {
     return;
   }
 
@@ -495,6 +496,14 @@ CurveNetwork* CurveNetwork::setMaterial(std::string m) {
   return this;
 }
 std::string CurveNetwork::getMaterial() { return material.get(); }
+
+CurveNetwork* CurveNetwork::setPickable(bool pickable_) {
+  pickable = pickable_;
+  refresh();
+  return this;
+}
+bool CurveNetwork::getPickable() { return pickable.get(); }
+
 
 std::string CurveNetwork::typeName() { return structureTypeName; }
 

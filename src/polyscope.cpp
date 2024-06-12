@@ -337,7 +337,7 @@ void processInputEvents() {
     }
 
     // === Mouse inputs
-    if (!io.WantCaptureMouse && !widgetCapturedMouse) {
+    if (!io.WantCaptureMouse && !widgetCapturedMouse && !io.KeySuper) {
 
       // Process drags
       bool dragLeft = ImGui::IsMouseDragging(0);

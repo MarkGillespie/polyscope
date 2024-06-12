@@ -20,5 +20,9 @@ bool doDefaultMouseInteraction = true;
 std::vector<WeakHandle<Widget>> widgets;
 std::vector<std::unique_ptr<SlicePlane>> slicePlanes;
 
+// Callbacks
+std::vector<std::function<void(Structure*, size_t)>> setSelectionCallbacks;
+std::vector<std::function<void()>> resetSelectionCallbacks;
+
 } // namespace state
 } // namespace polyscope

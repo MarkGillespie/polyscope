@@ -94,6 +94,10 @@ extern bool doDefaultMouseInteraction;
 // a callback function used to render a "user" gui
 extern std::function<void()> userCallback;
 
+// callbacks for picks
+extern std::vector<std::function<void(Structure*, size_t)>> setSelectionCallbacks;
+extern std::vector<std::function<void()>> resetSelectionCallbacks;
+
 // representative center for all registered structures
 glm::vec3 center();
 

@@ -56,6 +56,8 @@ class SurfaceMesh : public QuantityStructure<SurfaceMesh> {
 public:
   typedef SurfaceMeshQuantity QuantityType;
 
+  enum class ElementType { Vertex = 0, Edge, Face, Halfedge, Corner };
+
   // == Constructors
 
   // initializes members
@@ -74,6 +76,7 @@ public:
   virtual void buildCustomUI() override;
   virtual void buildCustomOptionsUI() override;
   virtual void buildPickUI(size_t localPickID) override;
+  std::pair<ElementType, size_t> identifyPickID(size_t pickID);
 
   // Render the the structure on screen
   virtual void draw() override;
@@ -273,6 +276,9 @@ public:
   SurfaceMesh* setShadeStyle(MeshShadeStyle newStyle);
   MeshShadeStyle getShadeStyle();
 
+  SurfaceMesh* setSurfacePickable(bool pickable);
+  bool getSurfacePickable();
+
   // == Rendering helpers used by quantities
 
   // void fillGeometryBuffers(render::ShaderProgram& p);
@@ -342,6 +348,7 @@ private:
   PersistentValue<BackFacePolicy> backFacePolicy;
   PersistentValue<glm::vec3> backFaceColor;
   PersistentValue<MeshShadeStyle> shadeStyle;
+  PersistentValue<bool> surfacePickable;
 
   // Do setup work related to drawing, including allocating openGL data
   void prepare();
@@ -413,8 +420,6 @@ private:
   SurfaceOneFormTangentVectorQuantity* addOneFormTangentVectorQuantityImpl(std::string name, const std::vector<float>& data, const std::vector<char>& orientations);
 
   // === Helper implementations
-
-  // clang-format on
 };
 
 // Register functions
@@ -438,6 +443,8 @@ inline SurfaceMesh* getSurfaceMesh(std::string name = "");
 inline bool hasSurfaceMesh(std::string name = "");
 inline void removeSurfaceMesh(std::string name = "", bool errorIfAbsent = false);
 
+// clang-format on
+std::ostream& operator<<(std::ostream& out, const SurfaceMesh::ElementType& e);
 
 } // namespace polyscope
 

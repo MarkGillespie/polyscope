@@ -33,6 +33,9 @@ bool haveSelection();
 void resetSelectionIfStructure(Structure* s); // If something from this structure is selected, clear the selection
                                               // (useful if a structure is being deleted)
 
+// Callbacks
+void registerSetSelectionCallback(const std::function<void(Structure*, size_t)>& callback);
+void registerResetSelectionCallback(const std::function<void()>& callback);
 
 // == Helpers
 

@@ -56,6 +56,10 @@ void resetSelection() {
   haveSelectionVal = false;
   currLocalPickInd = 0;
   currPickStructure = nullptr;
+
+  for (const std::function<void()>& f : state::resetSelectionCallbacks) {
+    f();
+  }
 }
 
 bool haveSelection() { return haveSelectionVal; }
@@ -81,7 +85,17 @@ void setSelection(std::pair<Structure*, size_t> newPick) {
     haveSelectionVal = true;
     currPickStructure = newPick.first;
     currLocalPickInd = newPick.second;
+    for (const std::function<void(Structure*, size_t)>& f : state::setSelectionCallbacks) {
+      f(newPick.first, newPick.second);
+    }
   }
+}
+
+void registerSetSelectionCallback(const std::function<void(Structure*, size_t)>& callback) {
+  state::setSelectionCallbacks.push_back(callback);
+}
+void registerResetSelectionCallback(const std::function<void()>& callback) {
+  state::resetSelectionCallbacks.push_back(callback);
 }
 
 // == Helpers

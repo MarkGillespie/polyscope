@@ -1979,6 +1979,7 @@ void GLShaderProgram::validateData() {
 
   // Check attributes
   int64_t attributeSize = -1;
+  std::string first_name;
   for (GLShaderAttribute a : attributes) {
     if (a.location == -1) continue;
     if (!a.buff) {
@@ -1992,9 +1993,10 @@ void GLShaderProgram::validateData() {
 
     if (attributeSize == -1) { // first one we've seen
       attributeSize = a.buff->getDataSize() / (compatCount);
+      first_name = a.name;
     } else { // not the first one we've seen
       if (a.buff->getDataSize() / (compatCount) != attributeSize) {
-        throw std::invalid_argument("Attributes have inconsistent size. One attribute has size " +
+        throw std::invalid_argument("Attributes have inconsistent size. " + first_name + " has size " +
                                     std::to_string(attributeSize) + " and " + a.name + " has size " +
                                     std::to_string(a.buff->getDataSize()));
       }
