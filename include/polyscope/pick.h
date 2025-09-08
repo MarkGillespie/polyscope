@@ -3,6 +3,7 @@
 #pragma once
 
 #include <cstdint>
+#include <functional> // std::function
 #include <list>
 #include <string>
 #include <tuple>
