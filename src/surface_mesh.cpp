@@ -199,6 +199,8 @@ void SurfaceMesh::computeTriangleAllEdgeInds() {
   triangleAllEdgeInds.data.resize(3 * 3 * nFacesTriangulation());
   halfedgeEdgeCorrespondence.resize(nHalfedges());
 
+  bool haveCustomIndex = !halfedgePerm.empty();
+
   // used to loop over edges
   std::unordered_map<std::pair<size_t, size_t>, size_t, polyscope::hash_combine::hash<std::pair<size_t, size_t>>>
       seenEdgeInds;
@@ -242,7 +244,9 @@ void SurfaceMesh::computeTriangleAllEdgeInds() {
         thisEdgeInd = seenEdgeInds[key];
       }
 
-      halfedgeEdgeCorrespondence[start + j] = thisEdgeInd;
+      size_t he = start + j;
+      if (haveCustomIndex) he = halfedgePerm[he];
+      halfedgeEdgeCorrespondence[he] = thisEdgeInd;
       thisTriInds[j] = thisEdgeInd;
     }
 
@@ -307,6 +311,8 @@ void SurfaceMesh::computeTriangleCornerInds() {
   triangleCornerInds.data.clear();
   triangleCornerInds.data.reserve(3 * nFacesTriangulation());
 
+  bool haveCustomIndex = !cornerPerm.empty();
+
   for (size_t iF = 0; iF < nFaces(); iF++) {
     size_t iStart = faceIndsStart[iF];
     size_t D = faceIndsStart[iF + 1] - iStart;
@@ -316,6 +322,12 @@ void SurfaceMesh::computeTriangleCornerInds() {
       uint32_t c0 = iStart;
       uint32_t c1 = iStart + j;
       uint32_t c2 = iStart + j + 1;
+
+      if (haveCustomIndex) {
+        c0 = cornerPerm[c0];
+        c1 = cornerPerm[c1];
+        c2 = cornerPerm[c2];
+      }
 
       triangleCornerInds.data.push_back(c0);
       triangleCornerInds.data.push_back(c1);
@@ -1240,11 +1252,9 @@ void SurfaceMesh::buildFaceInfoGui(const SurfaceMeshPickResult& result) {
 }
 
 void SurfaceMesh::buildEdgeInfoGui(const SurfaceMeshPickResult& result) {
+  // Note: permutation was already applied in computeTriangleAllEdgeInds
   size_t eInd = result.index;
   size_t displayInd = eInd;
-  if (edgePerm.size() > 0) {
-    displayInd = edgePerm[eInd];
-  }
   ImGui::TextUnformatted(("Edge #" + std::to_string(displayInd)).c_str());
 
   ImGui::Spacing();
@@ -1264,11 +1274,9 @@ void SurfaceMesh::buildEdgeInfoGui(const SurfaceMeshPickResult& result) {
 }
 
 void SurfaceMesh::buildHalfedgeInfoGui(const SurfaceMeshPickResult& result) {
+  // Note: permutation was already applied in computeTriangleCornerInds
   size_t heInd = result.index;
   size_t displayInd = heInd;
-  if (halfedgePerm.size() > 0) {
-    displayInd = halfedgePerm[heInd];
-  }
   ImGui::TextUnformatted(("Halfedge #" + std::to_string(displayInd)).c_str());
 
   ImGui::Spacing();
@@ -1288,6 +1296,7 @@ void SurfaceMesh::buildHalfedgeInfoGui(const SurfaceMeshPickResult& result) {
 }
 
 void SurfaceMesh::buildCornerInfoGui(const SurfaceMeshPickResult& result) {
+  // Note: permutation was already applied in computeTriangleAllHalfedgeInds
   size_t cInd = result.index;
   size_t displayInd = cInd;
   ImGui::TextUnformatted(("Corner #" + std::to_string(displayInd)).c_str());
